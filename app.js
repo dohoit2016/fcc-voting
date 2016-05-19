@@ -16,6 +16,7 @@ var configDB = require('./config/database');
 mongoose.connect(configDB.url);
 var User = require('./models/User.js')(mongoose);
 var Poll = require('./models/Poll.js')(mongoose);
+var Vote = require('./models/Vote.js')(mongoose);
 require('./config/passport')(passport, User);
 
 var routes = require('./routes/index');

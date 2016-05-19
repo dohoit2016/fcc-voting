@@ -3,6 +3,8 @@ var router = express.Router();
 var mongoose = require('mongoose');
 var Poll = mongoose.model('Poll');
 var User = mongoose.model('User');
+var Vote = mongoose.model('Vote');
+var async = require('async');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -91,30 +93,121 @@ router.post('/vote', function (req, res) {
 		if (!poll){
 			return res.redirect("view/" + pollId);
 		}
-		if (votefor == '-1'){
-			poll.options.push({
-				title: customOption,
-				count: 0
-			});
-			poll.save(function (err, poll) {
-				if (err){
-					throw err;
+
+		async.series([
+			function (callback) {
+				// Check if user voted for this poll or not.
+				console.log("start checking user");
+				if (req.user){
+					Vote.find({
+						userId: req.user.id,
+						pollId: pollId
+					}, function (err, votes) {
+						if (err){
+							throw err;
+						}
+						if (votes && (votes.length > 0)){
+							console.log('user voted');
+							// res.redirect('/poll/view/' + pollId);
+							callback(new Error("Err: user voted"), 1);
+							return;
+						}
+						console.log("user done.");
+						callback(null, 1);
+
+						// not here.
+					})
+
+					// must return here.
+					return;
 				}
-				return res.redirect('view/' + pollId);
-			});
-			return;
-		}
-		for (var i = 0; i < poll.options.length; i++) {
-			if (poll.options[i].id == votefor){
-				poll.options[i].count++;
-				poll.save(function (err, poll) {
+				callback(null, 1);
+			},
+			function (callback) {
+				console.log("start checking ip");
+				// Get IP
+				var ipAddr = req.headers["x-forwarded-for"];
+				if (ipAddr){
+					var list = ipAddr.split(",");
+					ipAddr = list[list.length-1];
+				} else {
+					ipAddr = req.connection.remoteAddress;
+				}
+				Vote.find({
+					ip: ipAddr,
+					pollId: pollId
+				}, function (err, votes) {
 					if (err){
 						throw err;
 					}
-					return res.redirect("view/" + pollId);
+					if(votes && votes.length > 0){
+						console.log('ip voted');
+						// res.redirect('/poll/view/' + pollId);
+						callback(new Error("Err: ip voted"), 2);
+						return;
+					}
+					console.log("ip done.");
+					callback(null, 2);
 				})
+			},
+			function (callback) {
+				console.log("start adding vote.");
+				// Get IP
+				var ipAddr = req.headers["x-forwarded-for"];
+				if (ipAddr){
+					var list = ipAddr.split(",");
+					ipAddr = list[list.length-1];
+				} else {
+					ipAddr = req.connection.remoteAddress;
+				}
+				var vote = new Vote();
+				vote.ip = ipAddr;
+				vote.pollId = pollId;
+				if (req.user){
+					vote.userId = req.user.id;
+				}
+				vote.save();
+				if (votefor == '-1'){
+					poll.options.push({
+						title: customOption,
+						count: 1
+					});
+					poll.save(function (err, poll) {
+						if (err){
+							throw err;
+						}
+						console.log("ok. new option");
+						// res.redirect('/poll/view/' + pollId);
+						callback(new Error("Err: new option"), 3);
+					});
+					return;
+				}
+				var check = true;
+				for (var i = 0; i < poll.options.length; i++) {
+					if (poll.options[i].id == votefor){
+						check = false;
+						poll.options[i].count++;
+						poll.save(function (err, poll) {
+							if (err){
+								throw err;
+							}
+							console.log("ok. voted");
+							callback(null, 3);
+						});
+						return;
+					}
+				}
+				if (check){
+					callback(null, 3);
+				}
 			}
-		};
+		], function (err, result) {
+			if (err){
+				console.log(err);
+			}
+			console.log("ok. finally");
+			return res.redirect("/poll/view/" + pollId);
+		})
 	})
 });
 
