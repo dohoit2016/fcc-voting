@@ -101,7 +101,10 @@
 									</div>
 									<% if ((typeof(errorMessage) != 'undefined') && (errorMessage.length > 0)) { %>
 										<div class="col-xs-12">
-											<span class="text-danger"><%= errorMessage %></span>
+											<div class="alert alert-danger">
+												<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+												<span><%= errorMessage %></span>
+											</div>
 										</div>
 									<% } %>
 									<div class="col-xs-12">

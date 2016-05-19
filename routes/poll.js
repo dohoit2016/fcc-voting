@@ -14,11 +14,21 @@ router.get('/', function(req, res, next) {
 router.get('/view/:id', function (req, res) {
 	Poll.findById(req.params.id, function (err, poll) {
 		if (err){
-			throw err;
+			console.log(err);
+			res.redirect('/');
+			return;
 		}
 		if (poll){
 			res.status(200);
-			res.render('viewpoll', {title: poll.title, user: req.user, poll: poll, appid: require('../config/auth').facebook.clientID, url: "http://" + req.headers.host + "/poll" + req.url});
+			res.render('viewpoll', {
+				title: poll.title, 
+				user: req.user, 
+				poll: poll, 
+				appid: require('../config/auth').facebook.clientID, 
+				url: "http://" + req.headers.host + "/poll" + req.url,
+				errorMessage: req.flash("errorMessage")
+			});
+			req.session.errorMessage = '';
 			return;
 		}
 		res.redirect("/");
@@ -108,7 +118,8 @@ router.post('/vote', function (req, res) {
 						}
 						if (votes && (votes.length > 0)){
 							console.log('user voted');
-							// res.redirect('/poll/view/' + pollId);
+							req.flash("errorMessage", "This user has already voted for this poll.");
+							res.redirect("/poll/view/" + pollId);
 							callback(new Error("Err: user voted"), 1);
 							return;
 						}
@@ -142,7 +153,8 @@ router.post('/vote', function (req, res) {
 					}
 					if(votes && votes.length > 0){
 						console.log('ip voted');
-						// res.redirect('/poll/view/' + pollId);
+						req.flash("errorMessage", "This IP has already voted for this poll.");
+						res.redirect('/poll/view/' + pollId);
 						callback(new Error("Err: ip voted"), 2);
 						return;
 					}
@@ -204,6 +216,7 @@ router.post('/vote', function (req, res) {
 		], function (err, result) {
 			if (err){
 				console.log(err);
+				return;
 			}
 			console.log("ok. finally");
 			return res.redirect("/poll/view/" + pollId);
