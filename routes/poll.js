@@ -18,7 +18,7 @@ router.get('/view/:id', function (req, res) {
 		}
 		if (poll){
 			res.status(200);
-			res.render('viewpoll', {title: poll.title, user: req.user, poll: poll, appid: require('../config/auth').facebook.clientID, url: "http://" + req.headers.host + req.url});
+			res.render('viewpoll', {title: poll.title, user: req.user, poll: poll, appid: require('../config/auth').facebook.clientID, url: "http://" + req.headers.host + "/poll" + req.url});
 			return;
 		}
 		res.redirect("/");
