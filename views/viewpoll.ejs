@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= title %></title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+		<link rel='stylesheet' href='/stylesheets/style.css' />
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"> <!-- load fontawesome -->
+		<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.3/Chart.min.js"></script>
+		<meta property="fb:app_id" content="<%= appid %>">
+		<meta property="og:site_name" content="FCC Voting" />
+		<meta property="og:type" content="website" />
+		<meta property="og:locale" content="vi_VN" />
+		<meta property="og:url" content="<%= url %>" />
+	</head>
+	</head>
+	<body>
+		<div id="fb-root"></div>
+		<script>(function(d, s, id) {
+		var js, fjs = d.getElementsByTagName(s)[0];
+		if (d.getElementById(id)) return;
+		js = d.createElement(s); js.id = id;
+		js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=<%= appid %>";
+		fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));</script>
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="container-fluid">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+						<span class="sr-only">Toggle navigation</span>
+					</button>
+					<a class="navbar-brand" href="/">FCC-Voting</a>
+				</div>
+		
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse navbar-ex1-collapse">
+				<% if (user) { %>
+					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><%= user.name %> <b class="caret"></b></a>
+							<ul class="dropdown-menu">
+								<li><a href="/poll/newpoll">New Poll</a></li>
+								<li><a href="/poll/mypolls">My Polls</a></li>
+								<li><a href="/auth/logout">Logout</a></li>
+							</ul>
+						</li>
+					</ul>
+					
+				<% } else { %>
+					<ul class="nav navbar-right">
+						<li>
+							<a class="btn btn-primary" href="/auth/facebook">Login with Facebook</a>
+						</li>
+					</ul>
+					
+
+				<% } %>
+					
+				</div><!-- /.navbar-collapse -->
+			</div>
+		</nav>
+		<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 col-lg-offset-3 col-md-offset-3">
+			<div class="jumbotron ng-scope">
+				<div class="row">
+					<div class="col-sm-4">
+						<p>
+							<%= poll.title %>
+						</p>
+						<form action="/poll/vote" method="post">
+							<input type="hidden" name="pollId" id="pollId" value="<%= poll.id %>" readonly="readonly" />
+							<div class="form-group">
+								<div class="row">
+									<div class="col-xs-12">
+										<div class="form-group">
+											<label for="votefor">I'd like to vote for...: </label>
+											<select id="votefor" class="form-control" name="votefor">
+												<option value="-2" disabled="disabled" selected="selected">Choose an option...: </option>
+												<% 	var options = poll.options; 
+													var data = [];
+													var labels = [];
+												%>
+												<% for(var i = 0; i < options.length; i++) { 
+														labels.push(options[i].title);
+														data.push(options[i].count);
+													%>
+												<option value="<%= options[i].id %>"><%= options[i].title %></option>
+												<% } %>
+												<option value="-1">I'd like a custom option</option>
+											</select>
+											<div class="form-group">
+												<label for="custom-option">Vote with my own option: </label>
+												<input id="custom-option" type="text" name="custom-option">
+											</div>
+										</div>
+									</div>
+									<div class="col-xs-12">
+										<input class="btn btn-primary btn-block" type="submit" value="Submit">
+									</div>
+								</div>
+							</div>
+						</form>
+						<div class="row">
+							<div class="col-xs-12">
+								<blaze-template name="shareitEnh">
+								<div class="share-buttons ng-scope">
+									<a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Ffcc-voting-arthow4n.herokuapp.com%2Fpolls%2FmC772YSvAaHjcyXwJ&amp;text=121212%20%7C%20fcc-voting" class="btn btn-block shareit-twitter-colors tw-share"><i class="fa fa-twitter"></i> Share on Twitter</a>
+								</div>
+								<div class="fb-like" data-href="<%= url %>" data-width="450" data-layout="standard" data-action="like" data-show-faces="true" data-share="true"></div>
+								</blaze-template>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-8">
+						<canvas id="chart"></canvas>
+						<% if ((user) && (user.id == poll.userId)) { %>
+							<form action="/poll/delete/<%= poll.id %>">
+								<button class="btn btn-block btn-danger">Remove this Poll</button>
+							</form>
+						<% } %>
+						<script>
+							var ctx = document.getElementById("chart");
+							var data = {
+								datasets: [{
+									data: <%- JSON.stringify(data) %>,
+									backgroundColor: [
+										"#FF6384",
+										"#4BC0C0",
+										"#FFCE56",
+										"#E7E9ED",
+										"#36A2EB"
+									],
+									label: 'My dataset' // for legend
+								}],
+								labels: <%- JSON.stringify(labels) %>
+							};
+							var myChart = new Chart(ctx, {
+								type: 'pie',
+								data: data,
+								options: {
+									scales: {
+										yAxes: [{
+											ticks: {
+												beginAtZero:true
+											}
+										}]
+									}
+								},
+								animation:{
+									animateScale:true
+								}
+							});
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
