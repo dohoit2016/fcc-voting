@@ -79,13 +79,15 @@ router.post('/newpoll', isLoggedIn, function (req, res) {
 	newPoll.userId = req.user.id;
 	newPoll.title = req.body.title;
 	newPoll.options = [];
-	var options = req.body.options.split("\n");
+	var options = req.body.options.trim().split("\n");
 	for (var i = 0; i < options.length; i++) {
-		newPoll.options.push({
-			title: options[i].trim(),
-			count: 0
-		});
-	};
+		if (options[i].trim().length > 0){
+			newPoll.options.push({
+				title: options[i].trim(),
+				count: 0
+			});
+		}
+	}
 	newPoll.save(function (err, poll) {
 		res.redirect('/poll/view/' + poll.id);
 	})
