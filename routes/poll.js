@@ -15,6 +15,7 @@ router.get('/view/:id', function (req, res) {
 			throw err;
 		}
 		if (poll){
+			res.status(200);
 			res.render('viewpoll', {title: poll.title, user: req.user, poll: poll, appid: require('../config/auth').facebook.clientID, url: "http://" + req.headers.host + req.url});
 			return;
 		}
