@@ -12,43 +12,7 @@
 	</head>
 	<body>
 		<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 col-lg-offset-2 col-md-offset-2">
-		<nav class="navbar navbar-default" role="navigation">
-			<div class="container-fluid">
-				<!-- Brand and toggle get grouped for better mobile display -->
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
-						<span class="sr-only">Toggle navigation</span>
-					</button>
-					<a class="navbar-brand" href="/">FCC-Voting</a>
-				</div>
-		
-				<!-- Collect the nav links, forms, and other content for toggling -->
-				<div class="collapse navbar-collapse navbar-ex1-collapse">
-				<% if (user) { %>
-					<ul class="nav navbar-nav navbar-right">
-						<li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><%= user.name %> <b class="caret"></b></a>
-							<ul class="dropdown-menu">
-								<li><a href="/poll/newpoll">New Poll</a></li>
-								<li><a href="/poll/mypolls">My Polls</a></li>
-								<li><a href="/auth/logout">Logout</a></li>
-							</ul>
-						</li>
-					</ul>
-					
-				<% } else { %>
-					<ul class="nav navbar-right">
-						<li>
-							<a class="btn btn-primary" href="/auth/facebook">Login with Facebook</a>
-						</li>
-					</ul>
-					
-
-				<% } %>
-					
-				</div><!-- /.navbar-collapse -->
-			</div>
-		</nav>
+		<% include nav %>
 		</div>
 		<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 col-lg-offset-2 col-md-offset-2">
 			<ul class="list-group">
